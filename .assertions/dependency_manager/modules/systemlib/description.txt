@@ -1,0 +1,1 @@
+libraries which come pre-installed on the system. It's highly advised not to use this for libraries which require manual installation

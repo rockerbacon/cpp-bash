@@ -1,0 +1,8 @@
+Help:
+Add a system library as a dependency. A system library is any library that's readily available after the Operating System installation
+
+Usage: ./dependencies.sh add systemlib LIB [static]
+
+static: if present, adds dependency to a static library instead of a dynamic one. This requires a static version of the library to exist
+LIB: This is the same as the name you'd use for linking with a compiler or for configuring a CMakeLists. Eg:
+	- './dependencies.sh add systemlib pthread' will add pthread as a dependency

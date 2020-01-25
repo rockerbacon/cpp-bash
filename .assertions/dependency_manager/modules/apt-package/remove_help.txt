@@ -1,0 +1,5 @@
+Help:
+Remove apt-package dependencies. This will not uninstall the package from the system, it will simply unlist the dependency from this project
+
+Usage: ./dependencies.sh remove apt-package PACKAGE
+Where PACKAGE is the same package added with './dependencies.sh add apt-package PACKAGE'. Use './dependencies.sh list' if you're unsure

@@ -1,0 +1,45 @@
+Help:
+Add source files from git repositories as dependencies
+Can only add files from the default branch (usually labeled 'master')
+
+Usage: ./dependencies.sh add git GIT_PATH [OPTIONS...]
+Example: ./dependencies.sh add git rockerbacon/assertions-test --local-only
+
+GIT_PATH:
+	Path to the repository in the git server
+
+OPTIONS:
+	--version "git tag or commit hash"
+		specify a git tag or commit hash identifying the version to be used
+		will be frozen to ensure dependency has the same version in all installations
+		the latest tagged commit will be used by default
+
+	--local-only
+		set dependency to not be exported with the project
+
+	--objs-dir "path"
+		specify the path where .cpp source files are located
+		path should be relative to the dependency's root directory
+		"src/objs" will be used by default
+
+	--include-dir "path"
+		specify the path where header files are located
+		path should be relative to the dependency's root directory
+		"src/objs" will be used by default
+
+	--before-linking "bash script"
+		specify script to execute right before linking the dependency to the project
+		working directory will be the dependency's root directory
+		can be any valid bash command or script
+
+	--alias "name"
+		specify a custom name for the dependency
+		the name is used for the header imports
+		the last path in the GIT_URL will be used by default (without the ".git" extension)
+
+	--domain "git server domain"
+		specify a custom git server domain
+		the default is "github.com"
+
+	--use-http
+		use HTTP instead of HTTPS

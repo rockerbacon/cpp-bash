@@ -1,0 +1,10 @@
+Help:
+Remove dependencies on system libraries. A system library is any library that's readily available after the Operating System installation.
+Removing the library dependency will not remove the library from the system under any circumstance
+
+Usage: ./dependencies.sh remove systemlib LIB
+
+LIB: This is the same name used during addition of the dependency and the same you'd use for linking with a compiler or for configuring a CMakeLists. Eg:
+	- './dependencies.sh remove systemlib pthread' will add pthread as a dependency
+
+Note: if you're unsure you can use './dependencies.sh list' to list all dependencies the project currently has

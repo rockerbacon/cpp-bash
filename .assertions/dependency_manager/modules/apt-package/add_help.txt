@@ -1,0 +1,5 @@
+Help:
+Add APT packages as dependencies. The installer will check whether APT is installed and if not the dependency will be ignored with a warning.
+
+Usage: ./dependencies.sh add apt-package PACKAGE
+Where PACKAGE is anything you would normally install with the command 'apt install PACKAGE'
