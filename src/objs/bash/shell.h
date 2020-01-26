@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <future>
 
 namespace bash {
 	namespace literals {
@@ -39,7 +40,7 @@ namespace bash {
 				exec(command.str());
 			}
 
-			std::string getvar (const std::string& label);
+			std::future<std::string> getvar (const std::string& label);
 	};
 }
 

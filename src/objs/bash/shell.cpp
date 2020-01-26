@@ -141,18 +141,20 @@ ifstream shell::get_stderr() {
 	return ifstream(stderr_path);
 }
 
-std::string shell::getvar (const std::string& label) {
-	auto command = "echo -n $" + label + " | nc -U -q 0 " + osocket_path;
-	exec(command);
+future<string> shell::getvar (const string& label) {
+	return async(launch::async, [&] {
+		auto command = "echo -n $" + label + " | nc -U -q 0 " + osocket_path;
+		exec(command);
 
-	auto output_descriptor = accept(osocket_descriptor, nullptr, nullptr);
+		auto output_descriptor = accept(osocket_descriptor, nullptr, nullptr);
 
-	char buffer[1024];
-	auto bytes_read = recv(output_descriptor, buffer, sizeof(buffer)/sizeof(char), 0);
+		char buffer[1024];
+		auto bytes_read = recv(output_descriptor, buffer, sizeof(buffer)/sizeof(char), 0);
 
-	if (bytes_read == -1)
-		throw system_error(errno, system_category(), "Error reading variable value");
+		if (bytes_read == -1)
+			throw system_error(errno, system_category(), "Error reading variable value");
 
-	return buffer;
+		return string(buffer);
+	});
 }
 

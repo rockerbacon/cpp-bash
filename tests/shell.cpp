@@ -56,9 +56,8 @@ begin_tests {
 			shell.exec("bash_str='test'");
 
 			auto bash_str = shell.getvar("bash_str");
-			this_thread::sleep_for(100ms);
 
-			assert(bash_str, ==, "test");
+			assert(bash_str.get(), ==, "test");
 		};
 	}
 } end_tests;
