@@ -90,6 +90,12 @@ void shell::init_client() {
 	}
 }
 
+void shell::send_to_shell(const std::string& data) {
+	auto send_status = send(isocket_descriptor, data.c_str(), data.size(), MSG_NOSIGNAL);
+	if (send_status == -1)
+		throw system_error(errno, std::system_category(), "Error sending data to shell");
+}
+
 shell::shell() {
 	char path_template[] = "/tmp/cpp-bash-XXXXXX";
 	dir_path = mkdtemp(path_template);
@@ -115,9 +121,7 @@ shell::~shell() {
 
 void shell::exec (std::string command) {
 	command += '\n';
-	auto send_status = send(isocket_descriptor, command.c_str(), command.size(), MSG_NOSIGNAL);
-	if (send_status == -1)
-		throw system_error(errno, std::system_category(), "Error sending command");
+	send_to_shell(command);
 }
 
 int shell::exit_status () const {

@@ -23,6 +23,8 @@ namespace bash {
 
 			void init_server();
 			void init_client();
+
+			void send_to_shell(const std::string& data);
 		public:
 			shell();
 			~shell();
