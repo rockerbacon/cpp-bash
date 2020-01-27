@@ -7,24 +7,38 @@ using namespace std::chrono_literals;
 
 begin_tests {
 	test_suite("when executing scripts in shell") {
-		test_case("should return correct exit status") {
+		test_case("should return correct exit status on abnormal termination") {
 			bash::shell shell;
 
-			shell.exec("exit 15");
+			auto command_future = shell.exec("exit 15");
 
-			this_thread::sleep_for(100ms);
-			assert(shell.exit_status(), ==, 15);
+			assert(command_future.get(), ==, 15);
+		};
+
+		test_case("should return exit status 0 on normal termination") {
+			bash::shell shell;
+
+			auto command_future = shell.exec("echo hello");
+
+			assert(command_future.get(), ==, 0);
+		};
+
+		test_case("should be able to execute multiple commands") {
+			bash::shell shell;
+
+			auto cmd1_future = shell.exec("echo hi");
+			auto cmd2_future = shell.exec("echo hello");
+
+			assert(cmd1_future.get(), ==, 0);
+			assert(cmd2_future.get(), ==, 0);
 		};
 
 		test_case("should return the correct stdout output") {
 			bash::shell shell;
 
-			shell.exec(R"(echo "hello world")");
-			shell.exec("exit 0");
+			shell.exec(R"(echo "hello world")").wait();
 
 			std::string script_output;
-
-			this_thread::sleep_for(100ms);
 			getline(shell.get_stdout(), script_output);
 
 			assert(script_output, ==, "hello world");
@@ -36,24 +50,21 @@ begin_tests {
 			bash::shell shell;
 			std::string cpp_str("test");
 
-			shell.setvar("cpp_str", cpp_str);
-			shell.exec(R"(
+			shell.setvar("cpp_str", cpp_str).wait();
+			auto variable_read = shell.exec(R"(
 				if [ "$cpp_str" == "test" ]; then
-					exit 5
+					exit 1
 				fi
-				exit 2
+				exit 0
 			)");
 
-			this_thread::sleep_for(100ms);
-			auto variable_written = (shell.exit_status() == 5);
-
-			assert(variable_written, ==, true);
+			assert(variable_read.get(), ==, 1);
 		};
 
 		test_case("should be able to read values from shell") {
 			bash::shell shell;
 
-			shell.exec("bash_str='test'");
+			shell.exec("bash_str='test'").wait();
 
 			auto bash_str = shell.getvar("bash_str");
 

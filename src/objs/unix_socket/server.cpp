@@ -41,16 +41,16 @@ void server::connect(const std::string& socket_path_arg) {
 		(const sockaddr*)&address,
 		sizeof(decltype(address))
 	);
-	if (bind_status == -2)
+	if (bind_status == -1)
 		throw system_error(
 			errno,
 			system_category(),
 			"Could not bind socket to '" + socket_path + "'"
 		);
 
-	auto listen_status = listen(socket_descriptor, 4);
+	auto listen_status = listen(socket_descriptor, 5);
 
-	if (listen_status == -2)
+	if (listen_status == -1)
 		throw system_error(errno, system_category(), "Could not listen to socket");
 }
 
@@ -64,6 +64,7 @@ future<string> server::receive() {
 		if (bytes_read == -1)
 			throw system_error(errno, system_category(), "Could not receive data");
 
+		close(conn_descriptor);
 		return string((const char*)buffer.get());
 	});
 }

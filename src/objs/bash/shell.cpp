@@ -7,7 +7,6 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/wait.h>
-#include <thread>
 
 using namespace bash;
 using namespace bash::literals;
@@ -17,71 +16,33 @@ void shell::init_server() {
 	stringstream cmd_builder;
 
 	cmd_builder
-		<< "nc -lU " << isocket_path << " | bash"
+		<< "nc -lU " << dir_path << "/input.sock | bash "
 		<< " 1> " << stdout_path
 		<< " 2> " << stderr_path
 	;
 
 	auto command = cmd_builder.str();
 	auto status_code = std::system(command.c_str());
+	auto exit_status = 	WEXITSTATUS(status_code);
+
+	try {
+		unix_socket::client client(dir_path + "/output.sock");
+		client.send(to_string(exit_status));
+	} catch (const system_error& error) {
+		if (error.code().value() != ETIMEDOUT) throw error;
+	}
+
 	_exit(WEXITSTATUS(status_code));
 }
 
 void shell::init_client() {
-	const auto timeout = 5000ms;
-
-	sockaddr_un isocket_address;
-	memset(&isocket_address, 0, sizeof(isocket_address));
-
-	isocket_address.sun_family = AF_UNIX;
-	strcpy(isocket_address.sun_path, isocket_path.c_str());
-
-	isocket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-
-	int conn_status;
-	bool retry = true;
-	auto connection_begin = chrono::steady_clock::now();
-	do {
-		conn_status = connect(
-			isocket_descriptor,
-			(const sockaddr*)&isocket_address,
-			sizeof(decltype(isocket_address))
-		);
-
-		auto error_code = errno;
-		if (conn_status == -1) switch (error_code) {
-			case ECONNREFUSED:
-			case EADDRNOTAVAIL:
-			case ENOENT:
-				if (chrono::steady_clock::now() - connection_begin > timeout) {
-					error_code = ETIMEDOUT;
-					[[fallthrough]];
-				} else {
-					break;
-				}
-			default: {
-				kill(shell_pid, SIGTERM);
-				throw system_error(error_code, std::system_category(), "Error starting client");
-			}
-		} else {
-			retry = false;
-		}
-
-	} while (retry);
-
+	client.connect(dir_path + "/input.sock");
 	return_server.connect(dir_path + "/output.sock");
-}
-
-void shell::send_to_shell(const std::string& data) {
-	auto send_status = send(isocket_descriptor, data.c_str(), data.size(), MSG_NOSIGNAL);
-	if (send_status == -1)
-		throw system_error(errno, std::system_category(), "Error sending data to shell");
 }
 
 shell::shell() {
 	char path_template[] = "/tmp/cpp-bash-XXXXXX";
 	dir_path = mkdtemp(path_template);
-	isocket_path = dir_path + "/input.sock";
 	stdout_path = dir_path + "/stdout.out";
 	stderr_path = dir_path + "/stderr.out";
 
@@ -95,13 +56,16 @@ shell::shell() {
 }
 
 shell::~shell() {
-	close(isocket_descriptor);
 	kill(shell_pid, SIGTERM);
 }
 
-void shell::exec (std::string command) {
-	command += '\n';
-	send_to_shell(command);
+future<int> shell::exec (const string& command) {
+	return async(launch::async, [this](string command) {
+		command += "\necho -n 0 | nc -U -q 0 " + return_server.get_socket_path() + '\n';
+		client.send(command).wait();
+		auto exit_status_str = return_server.receive().get();
+		return atoi(exit_status_str.c_str());
+	}, command);
 }
 
 int shell::exit_status () const {
@@ -127,11 +91,11 @@ ifstream shell::get_stderr() {
 
 future<string> shell::getvar (const string& label) {
 	return async(launch::async, [this, label] {
-		send_to_shell(
+		client.send(
 			"echo -n $" + label +
 			" | nc -U -q 0 " + return_server.get_socket_path() +
 			'\n'
-		);
+		).wait();
 
 		return return_server.receive().get();
 	});
