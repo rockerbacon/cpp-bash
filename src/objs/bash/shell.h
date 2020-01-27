@@ -4,6 +4,8 @@
 #include <sstream>
 #include <future>
 
+#include "../unix_socket/server.h"
+
 namespace bash {
 	namespace literals {
 		std::stringstream operator"" _bash(const char* literal, size_t length);
@@ -13,13 +15,12 @@ namespace bash {
 		private:
 			std::string dir_path;
 			std::string isocket_path;
-			std::string osocket_path;
+			unix_socket::server return_server;
 			std::string stdout_path;
 			std::string stderr_path;
 			int exit_status_code;
 			pid_t shell_pid;
 			int isocket_descriptor;
-			int osocket_descriptor;
 
 			void init_server();
 			void init_client();

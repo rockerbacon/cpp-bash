@@ -1,4 +1,5 @@
 #include "shell.h"
+#include "../unix_socket/server.h"
 
 #include <sstream>
 #include <cstdio>
@@ -68,26 +69,7 @@ void shell::init_client() {
 
 	} while (retry);
 
-	sockaddr_un osocket_address;
-	memset(&osocket_address, 0, sizeof(osocket_address));
-
-	osocket_address.sun_family = AF_UNIX;
-	strcpy(osocket_address.sun_path, osocket_path.c_str());
-
-	osocket_descriptor = socket(AF_UNIX, SOCK_STREAM, 0);
-
-	bind(
-		osocket_descriptor,
-		(const sockaddr*)&osocket_address,
-		sizeof(decltype(osocket_address))
-	);
-
-	auto listen_status = listen(osocket_descriptor, 5);
-
-	if (listen_status == -1) {
-		kill(shell_pid, SIGTERM);
-		throw system_error(errno, std::system_category(), "Error creating shell output");
-	}
+	return_server.connect(dir_path + "/output.sock");
 }
 
 void shell::send_to_shell(const std::string& data) {
@@ -100,7 +82,6 @@ shell::shell() {
 	char path_template[] = "/tmp/cpp-bash-XXXXXX";
 	dir_path = mkdtemp(path_template);
 	isocket_path = dir_path + "/input.sock";
-	osocket_path = dir_path + "/output.sock";
 	stdout_path = dir_path + "/stdout.out";
 	stderr_path = dir_path + "/stderr.out";
 
@@ -115,7 +96,6 @@ shell::shell() {
 
 shell::~shell() {
 	close(isocket_descriptor);
-	close(osocket_descriptor);
 	kill(shell_pid, SIGTERM);
 }
 
@@ -146,19 +126,14 @@ ifstream shell::get_stderr() {
 }
 
 future<string> shell::getvar (const string& label) {
-	return async(launch::async, [&] {
-		auto command = "echo -n $" + label + " | nc -U -q 0 " + osocket_path;
-		exec(command);
+	return async(launch::async, [this, label] {
+		send_to_shell(
+			"echo -n $" + label +
+			" | nc -U -q 0 " + return_server.get_socket_path() +
+			'\n'
+		);
 
-		auto output_descriptor = accept(osocket_descriptor, nullptr, nullptr);
-
-		char buffer[1024];
-		auto bytes_read = recv(output_descriptor, buffer, sizeof(buffer)/sizeof(char), 0);
-
-		if (bytes_read == -1)
-			throw system_error(errno, system_category(), "Error reading variable value");
-
-		return string(buffer);
+		return return_server.receive().get();
 	});
 }
 
