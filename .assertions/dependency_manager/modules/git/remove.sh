@@ -8,15 +8,15 @@ DEPENDENCIES_OBJ_DIR="$DEPENDENCIES_DIR/objs"
 REPOSITORIES_DIR="$DEPENDENCIES_DIR/git"
 
 ##################### Command Line Interface ##########################
-REPOSITORY_PATH="$1"
-if [ "$REPOSITORY_PATH" == "" ]; then
-	echo "Error: unspecified repository path"
+GIT_URL="$1"
+if [ "$GIT_URL" == "" ]; then
+	echo "Error: unspecified git URL"
 	exit 1
 fi
 ##################### Command Line Interface ##########################
 
-DEPENDENCY_NAME=$(echo "$REPOSITORY_PATH" | sed "s/^.*\///")
-DEPENDENCY_REPOSITORY_DIR="$REPOSITORIES_DIR/$DEPENDENCY_NAME"
+RELATIVE_DEPENDENCY_REPOSITORY_DIR=$(echo "$GIT_URL" | sed "s/^.*\///; s/\.git$//")
+DEPENDENCY_REPOSITORY_DIR="$REPOSITORIES_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR"
 
 if [ ! -d "$DEPENDENCY_REPOSITORY_DIR" ]; then
 	echo "Info: dependency not installed" 1>&2
@@ -29,11 +29,11 @@ else
 	rm -rf "$DEPENDENCY_REPOSITORY_DIR"
 fi
 
-if [ ! -d "$DEPENDENCIES_OBJ_DIR/$DEPENDENCY_NAME" ]; then
+if [ ! -d "$DEPENDENCIES_OBJ_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR" ]; then
 	echo "Info: dependency source not linked" 1>&2
 else
-	echo "Info: removing links in '$DEPENDENCIES_OBJ_DIR/$DEPENDENCY_NAME'" 1>&2
-	rm -rf "$DEPENDENCIES_OBJ_DIR/$DEPENDENCY_NAME"
+	echo "Info: removing links in '$DEPENDENCIES_OBJ_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR'" 1>&2
+	rm -rf "$DEPENDENCIES_OBJ_DIR/$RELATIVE_DEPENDENCY_REPOSITORY_DIR"
 fi
 
 ALL_INSTALLED_DEPENDENCIES=$(ls -f -1 --color=never "$DEPENDENCIES_OBJ_DIR")

@@ -1,1 +1,1 @@
-source files from git repositories
+source files of projects stored in git repositories

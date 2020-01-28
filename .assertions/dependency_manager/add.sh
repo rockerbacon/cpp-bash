@@ -1,10 +1,11 @@
 #!/bin/bash
 
-ESCAPED_DEPENDENCY_MODULES_DIR=$(echo "$DEPENDENCY_MANAGER_MODULES_DIR" | sed 's/\//\\\//g; s/\./\\\./g')
+DEPENDENCY_MODULES_DIR="$DEPENDENCY_MANAGER_DIR/modules"
+ESCAPED_DEPENDENCY_MODULES_DIR=$(echo "$DEPENDENCY_MODULES_DIR" | sed 's/\//\\\//g; s/\./\\\./g')
 
 ################ Command Line Interface ##################
 print_add_help () {
-	AVAILABLE_MODULES=("$DEPENDENCY_MANAGER_MODULES_DIR/*")
+	AVAILABLE_MODULES=("$DEPENDENCY_MODULES_DIR/*")
 	echo "Help:"
 	echo "Add new dependencies to the project. Dependency information is stored inside the project so that other developers are able to easily get them"
 	echo
@@ -43,7 +44,7 @@ if [ "$1" == "--help" ]; then
 else
 	DEPENDENCY_TYPE="$1"
 	shift
-	DEPENDENCY_TYPE_MODULE_DIR="$DEPENDENCY_MANAGER_MODULES_DIR/$DEPENDENCY_TYPE"
+	DEPENDENCY_TYPE_MODULE_DIR="$DEPENDENCY_MODULES_DIR/$DEPENDENCY_TYPE"
 	check_dependency_type_is_valid
 	if [ "$1" == "--help" ]; then
 		print_dependency_help
@@ -52,7 +53,7 @@ else
 fi
 ################ Command Line Interface ##################
 
-LOCAL_INSTALL_OUTPUT=$(source "$DEPENDENCY_TYPE_MODULE_DIR/install.sh" "$@")
+LOCAL_INSTALL_OUTPUT=$("$DEPENDENCY_TYPE_MODULE_DIR/install.sh" "$@")
 DEPENDENCY_INSTALL_STATUS=$?
 if [ "$DEPENDENCY_INSTALL_STATUS" != "0" ]; then
 	echo "$LOCAL_INSTALL_OUTPUT"
