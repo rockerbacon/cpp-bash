@@ -1,7 +1,7 @@
 # Description
 Use bash as an extension language, deeply mixing it into your C++ code.
 
-The proposed [architecture](#architecture) is technology agnostic and can be used to integrate most languages.
+The [proposed architecture](#architecture) is technology agnostic and can be used to integrate most languages.
 
 This project is managed by the [Assertions C++ Framework](https://github.com/rockerbacon/assertions). If your project also uses assertions, you can import it using the command:
 ```
