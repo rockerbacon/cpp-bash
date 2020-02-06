@@ -56,7 +56,20 @@ shell::shell() {
 }
 
 shell::~shell() {
-	kill(shell_pid, SIGTERM);
+	if (shell_pid != -1)
+		kill(shell_pid, SIGTERM);
+}
+
+shell::shell(shell&& other) :
+	dir_path(other.dir_path),
+	client(std::move(other.client)),
+	return_server(std::move(other.return_server)),
+	stdout_path(other.stdout_path),
+	stderr_path(other.stderr_path),
+	exit_status_code(other.exit_status_code),
+	shell_pid(other.shell_pid)
+{
+	other.shell_pid = -1;
 }
 
 future<int> shell::exec (const string& command) {
@@ -101,3 +114,18 @@ future<string> shell::getvar (const string& label) {
 	});
 }
 
+void bash::swap(shell& a, shell& b) {
+	using std::swap;
+	swap(a.dir_path, b.dir_path);
+	swap(a.client, b.client);
+	swap(a.return_server, b.return_server);
+	swap(a.stdout_path, b.stdout_path);
+	swap(a.stderr_path, b.stderr_path);
+	swap(a.exit_status_code, b.exit_status_code);
+	swap(a.shell_pid, b.shell_pid);
+}
+
+shell& shell::operator=(shell&& other) {
+	swap(*this, other);
+	return *this;
+}

@@ -19,8 +19,18 @@ server::server (const string& socket_path, size_t buffer_size) :
 	connect(socket_path);
 }
 
+server::server (server&& other) :
+	socket_path(std::move(other.socket_path)),
+	socket_descriptor(other.socket_descriptor),
+	buffer_size(other.buffer_size),
+	buffer(std::move(other.buffer))
+{
+	other.socket_descriptor = -1;
+}
+
 server::~server() {
-	close(socket_descriptor);
+	if (socket_descriptor != -1)
+		close(socket_descriptor);
 }
 
 void server::connect(const std::string& socket_path_arg) {
@@ -73,3 +83,10 @@ const string& server::get_socket_path() const {
 	return socket_path;
 }
 
+void unix_socket::swap(server& a, server& b) {
+	using std::swap;
+	swap(a.socket_path, b.socket_path);
+	swap(a.socket_descriptor, b.socket_descriptor);
+	swap(a.buffer_size, b.buffer_size);
+	swap(a.buffer, b.buffer);
+}

@@ -67,3 +67,9 @@ const string& client::get_socket_path() const {
 	return socket_path;
 }
 
+void unix_socket::swap(client& a, client& b) {
+	using std::swap;
+	swap(a.timeout, b.timeout);
+	swap(a.socket_path, b.socket_path);
+	swap(a.socket_descriptor, b.socket_descriptor);
+}

@@ -6,6 +6,8 @@
 namespace unix_socket {
 	using namespace std::chrono_literals;
 	class client {
+		friend void swap(client& a, client& b);
+
 		private:
 			std::chrono::milliseconds timeout;
 			std::string socket_path;
@@ -22,5 +24,7 @@ namespace unix_socket {
 
 			const std::string& get_socket_path() const;
 	};
+
+	void swap(client& a, client& b);
 }
 
