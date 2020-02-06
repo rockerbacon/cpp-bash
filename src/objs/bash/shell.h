@@ -13,6 +13,8 @@ namespace bash {
 	}
 
 	class shell {
+		friend void swap(shell& a, shell& b);
+
 		private:
 			std::string dir_path;
 			unix_socket::client client;
@@ -28,6 +30,7 @@ namespace bash {
 		public:
 			shell();
 			~shell();
+			shell(shell&& other);
 
 			std::future<int> exec (const std::string& command);
 			int exit_status () const;
@@ -43,6 +46,10 @@ namespace bash {
 			}
 
 			std::future<std::string> getvar (const std::string& label);
+
+			bash::shell& operator=(shell&& other);
 	};
+
+	void swap(shell& a, shell& b);
 }
 

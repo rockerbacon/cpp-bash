@@ -71,5 +71,50 @@ begin_tests {
 			assert(bash_str.get(), ==, "test");
 		};
 	}
+
+	test_suite("when move-constructing a shell") {
+		test_case("shell should be movable") {
+			bash::shell shellA;
+			bash::shell shellB(std::move(shellA));
+		};
+
+		test_case("shell should retain state after being moved") {
+			bash::shell shellA;
+			shellA.exec("varA=test").wait();
+			bash::shell shellB(std::move(shellA));
+			auto varA = shellB.getvar("varA").get();
+			assert(varA, ==, "test");
+		};
+
+		test_case("shell should be swappable") {
+			bash::shell shellA;
+			bash::shell shellB;
+
+			shellA.exec("var=a").wait();
+			shellB.exec("var=b").wait();
+
+			swap(shellB, shellA);
+
+			auto varA = shellA.getvar("var").get();
+			auto varB = shellB.getvar("var").get();
+
+			assert(varA, ==, "b");
+			assert(varB, ==, "a");
+
+		};
+
+		test_case("shell should be move assignable") {
+			bash::shell shellA;
+			bash::shell shellB;
+
+			shellA.exec("var=a").wait();
+
+			shellB = std::move(shellA);
+
+			auto var = shellB.getvar("var").get();
+
+			assert(var, ==, "a");
+		};
+	}
 } end_tests;
 
