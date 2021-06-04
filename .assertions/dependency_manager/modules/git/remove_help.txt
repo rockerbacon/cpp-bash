@@ -1,6 +1,7 @@
 Help:
-Remove dependency on source files of projects stored in git repositories
+Remove dependency on source files from git repositories
 
 Usage: ./dependencies.sh remove git GIT_URL
 
 GIT_URL: HTTP URL used to clone the git repository. This is the same URL used for adding the dependency
+

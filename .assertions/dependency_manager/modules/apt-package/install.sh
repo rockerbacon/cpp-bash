@@ -1,16 +1,16 @@
 #!/bin/bash
 
-apt --version > /dev/null
+command -v apt > /dev/null
 APT_IS_INSTALLED=$?
 if [ "$APT_IS_INSTALLED" != "0" ]; then
 	echo "Warning: APT not installed on this machine. Make sure the package manager your Operating System uses is supported by this project" 1>&2
-	exit 0
+	return 0
 fi
 
 PACKAGE=$1
 if [ "$PACKAGE" == "" ]; then
 	echo "Error: unspecified package"
-	exit 1
+	return 1
 fi
 
 dpkg-query -s "$PACKAGE" > /dev/null

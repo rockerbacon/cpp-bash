@@ -1,14 +1,45 @@
 Help:
-Add dependency on source files of projects stored in git repositories. Branch 'master' is always the one used during installation
+Add source files from git repositories as dependencies
+Can only add files from the default branch (usually labeled 'master')
 
-Usage: ./dependencies.sh add git GIT_URL [GIT_COMMIT] [LOCAL_ONLY] [OBJS_DIR] [INCLUDE_DIR] [POST_DOWNLOAD_SCRIPT]
+Usage: ./dependencies.sh add git GIT_PATH [OPTIONS...]
+Example: ./dependencies.sh add git rockerbacon/assertions-test --local-only
 
-GIT_URL: HTTP URL used to clone git repositories. SSH URLs are not acceptable, since SSH may not be configured in every developer environment
-GIT_COMMIT: git commit to use. May be a git tag. The lastest tagged commit will be used by default.
-	IMPORTANT: the commit will be frozen, meaning all dependency installations will always use the same version. This is true even if the commit is not specified
-LOCAL_ONLY: boolean value which tells whether this dependency has to be installed recursively when adding this project as a dependency in another one. Default is false
-OBJS_DIR: path relative to the project root where the .cpp source files are located. "src/objs" is the default
-INCLUDE_DIR: path relative to the project root where the header files are located. "src/objs" is the default
-POST_DOWNLOAD_SCRIPT: a script to execute right after the checkout. The script is executed inside the dependency root and can be used to prepare it for installation. The script can be any valid bash command
-	Eg.: A dependency you want to add might have its files all over the place, so you can use a script to move all files to a centralized directory which you can then use as your OBJS_DIR
+GIT_PATH:
+	Path to the repository in the git server
 
+OPTIONS:
+	--version "git tag or commit hash"
+		specify a git tag or commit hash identifying the version to be used
+		will be frozen to ensure dependency has the same version in all installations
+		the latest tagged commit will be used by default
+
+	--local-only
+		set dependency to not be exported with the project
+
+	--objs-dir "path"
+		specify the path where .cpp source files are located
+		path should be relative to the dependency's root directory
+		"src/objs" will be used by default
+
+	--include-dir "path"
+		specify the path where header files are located
+		path should be relative to the dependency's root directory
+		"src/objs" will be used by default
+
+	--before-linking "bash script"
+		specify script to execute right before linking the dependency to the project
+		working directory will be the dependency's root directory
+		can be any valid bash command or script
+
+	--alias "name"
+		specify a custom name for the dependency
+		the name is used for the header imports
+		the last path in the GIT_URL will be used by default (without the ".git" extension)
+
+	--domain "git server domain"
+		specify a custom git server domain
+		the default is "github.com"
+
+	--use-http
+		use HTTP instead of HTTPS

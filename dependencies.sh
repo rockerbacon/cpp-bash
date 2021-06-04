@@ -1,14 +1,15 @@
 #!/bin/bash
 
 PROJECT_ROOT=$(realpath $(dirname $0))
+
 DEPENDENCIES_DIR="$PROJECT_ROOT/external_dependencies"
-DEPENDENCIES_LIB_DIR="$DEPENDENCIES_DIR/lib"
 DEPENDENCIES_INCLUDE_DIR="$DEPENDENCIES_DIR/include"
 DEPENDENCIES_OBJS_DIR="$DEPENDENCIES_DIR/objs"
-DEPENDENCIES_LOCAL_OBJS_DIR="$DEPENDENCIES_DIR/dev_objs"
-DEPENDENCY_MANAGER_DIR="$PROJECT_ROOT/.assertions/dependency_manager"
+DEPENDENCIES_LOCAL_OBJS_DIR="$DEPENDENCIES_DIR/local_objs"
 
-mkdir -p "$DEPENDENCIES_LIB_DIR"
+DEPENDENCY_MANAGER_DIR="$PROJECT_ROOT/.assertions/dependency_manager"
+DEPENDENCY_MANAGER_MODULES_DIR="$DEPENDENCY_MANAGER_DIR/modules"
+
 mkdir -p "$DEPENDENCIES_INCLUDE_DIR"
 mkdir -p "$DEPENDENCIES_OBJS_DIR"
 mkdir -p "$DEPENDENCIES_LOCAL_OBJS_DIR"
@@ -26,6 +27,18 @@ print_help () {
 	echo "	clean: delete all downloaded dependencies (everything inside ./external_dependencies)"
 	echo "	install: download and configure all dependencies. Use '--ignore-local-dependencies' to not install dependencies marked as local-only"
 	echo "	list: list all project's dependencies"
+}
+
+log_info () {
+	echo "Info: $1"
+}
+
+log_error () {
+	echo "Error: $1" 1>&2
+}
+
+freeze_args () {
+	echo "Info: dependency configured: $1"
 }
 
 determine_dependency_list_is_empty() {
@@ -55,14 +68,14 @@ elif [ "$1" == "clean" ]; then
 		rm -rf "$PROJECT_ROOT/external_dependencies"
 		echo "Info: Downloaded dependencies deleted"
 	else
-		echo "Info: Operation cancelled"
+		echo "Info: Operation canceled"
 	fi
 elif [ "$1" == "list" ]; then
 	determine_dependency_list_is_empty
 	if [ $DEPENDENCY_LIST_IS_EMPTY ]; then
 		echo "Info: project has no external dependencies"
 	else
-		echo "$DEPENDENCY_LIST" | sed "s/\/install\.sh//g"
+		echo "$DEPENDENCY_LIST" | sed "s/\/install\.sh//g; s/^source\s\+//g"
 	fi
 elif [ "$1" == "install" ]; then
 	determine_dependency_list_is_empty

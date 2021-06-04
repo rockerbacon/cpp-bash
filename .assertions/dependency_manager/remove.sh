@@ -1,11 +1,10 @@
 #!/bin/bash
 
-DEPENDENCY_MODULES_DIR="$DEPENDENCY_MANAGER_DIR/modules"
-ESCAPED_DEPENDENCY_MODULES_DIR=$(echo "$DEPENDENCY_MODULES_DIR" | sed 's/\//\\\//g; s/\./\\\./g')
+ESCAPED_DEPENDENCY_MODULES_DIR=$(echo "$DEPENDENCY_MANAGER_MODULES_DIR" | sed 's/\//\\\//g; s/\./\\\./g')
 
 ################ Command Line Interface ##################
 print_remove_help () {
-	AVAILABLE_MODULES=("$DEPENDENCY_MODULES_DIR/*")
+	AVAILABLE_MODULES=("$DEPENDENCY_MANAGER_MODULES_DIR/*")
 	echo "Help:"
 	echo "Remove dependencies from the project. Dependency information is stored inside the project so that other developers are able to easily get them"
 	echo
@@ -45,7 +44,7 @@ if [ "$1" == "--help" ]; then
 else
 	DEPENDENCY_TYPE="$1"
 	shift
-	DEPENDENCY_TYPE_MODULE_DIR="$DEPENDENCY_MODULES_DIR/$DEPENDENCY_TYPE"
+	DEPENDENCY_TYPE_MODULE_DIR="$DEPENDENCY_MANAGER_MODULES_DIR/$DEPENDENCY_TYPE"
 	check_dependency_type_is_valid
 	if [ "$1" == "--help" ]; then
 		print_dependency_help
@@ -55,15 +54,13 @@ fi
 ################ Command Line Interface ##################
 
 if [ "$1" == "" ]; then
-	echo "Error: no dependency identification"
-	echo
+	log_error "no dependency identification"
 	print_remove_help
 	exit 1
 fi
 
 if [ ! -f "$DEPENDENCY_MANAGER_DIR/install.sh" ]; then
-	echo "Error: project contains no dependencies"
-	echo
+	log_error "project contains no dependencies"
 	print_remove_help
 	exit 1
 fi
@@ -72,21 +69,19 @@ echo "Do you really want to attempt removal of dependency '$DEPENDENCY_TYPE $@'?
 read CONFIRMATION
 
 if [ "${CONFIRMATION[0]}" != "y" ] && [ "${CONFIRMATION[1]}" != "Y" ]; then
-	echo "Info: operation cancelled"
+	log_info "operation canceled"
 	exit 0
 fi
 
-LOCAL_REMOVAL_OUTPUT=$("$DEPENDENCY_TYPE_MODULE_DIR/remove.sh" "$@")
+source "$DEPENDENCY_TYPE_MODULE_DIR/remove.sh" "$@"
 DEPENDENCY_REMOVAL_STATUS=$?
 if [ "$DEPENDENCY_REMOVAL_STATUS" != "0" ]; then
-	echo "$LOCAL_REMOVAL_OUTPUT"
-	echo "Error: dependency not removed because it could not be removed locally"
-	echo
+	log_error "dependency not removed because it could not be removed locally"
 	print_dependency_help
 	exit 1
 fi
 
-echo "Info: local removal successful, unlisting dependency from '$DEPENDENCY_MANAGER_DIR/install.sh'"
+log_info "local removal successful, unlisting dependency from '$DEPENDENCY_MANAGER_DIR/install.sh'"
 DEPENDENCY_LISTING_MATCH="$DEPENDENCY_TYPE/install.sh $@"
 grep -v "$DEPENDENCY_LISTING_MATCH" "$DEPENDENCY_MANAGER_DIR/install.sh" > "$DEPENDENCY_MANAGER_DIR/install.sh.swp" || true
 
