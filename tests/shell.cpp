@@ -5,7 +5,7 @@
 using namespace std;
 using namespace std::chrono_literals;
 
-begin_tests {
+tests {
 	test_suite("when executing scripts in shell") {
 		test_case("should return correct exit status on abnormal termination") {
 			bash::shell shell;
@@ -116,5 +116,5 @@ begin_tests {
 			assert(var, ==, "a");
 		};
 	}
-} end_tests;
+};
 
